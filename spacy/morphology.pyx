@@ -7,7 +7,7 @@ except ImportError:
     import json
 
 from .parts_of_speech import IDS as POS_IDS
-from .parts_of_speech cimport ADJ, VERB, NOUN, PUNCT
+from .parts_of_speech cimport ADJ, VERB, NOUN, PUNCT, AUX
 from .attrs cimport IS_SPACE
 from .lexeme cimport Lexeme
 
@@ -101,7 +101,7 @@ cdef class Morphology:
         cdef unicode py_string = self.strings[orth]
         if self.lemmatizer is None:
             return self.strings[py_string.lower()]
-        if univ_pos not in (NOUN, VERB, ADJ, PUNCT):
+        if univ_pos not in (NOUN, VERB, ADJ, PUNCT, AUX):
             return self.strings[py_string.lower()]
         cdef set lemma_strings
         cdef unicode lemma_string

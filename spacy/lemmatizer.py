@@ -4,7 +4,7 @@ import pathlib
 
 import ujson as json
 
-from .symbols import NOUN, VERB, ADJ, PUNCT
+from .symbols import AUX, NOUN, VERB, ADJ, PUNCT
 
 
 class Lemmatizer(object):
@@ -12,7 +12,7 @@ class Lemmatizer(object):
     def load(cls, path):
         index = {}
         exc = {}
-        for pos in ['adj', 'noun', 'verb']:
+        for pos in ['adj', 'noun', 'verb', 'aux']:
             pos_index_path = path / 'wordnet' / 'index.{pos}'.format(pos=pos)
             if pos_index_path.exists():
                 with pos_index_path.open() as file_:
@@ -37,6 +37,8 @@ class Lemmatizer(object):
     def __call__(self, string, univ_pos, **morphology):
         if univ_pos == NOUN:
             univ_pos = 'noun'
+        elif univ_pos == AUX:
+            univ_pos = 'aux'
         elif univ_pos == VERB:
             univ_pos = 'verb'
         elif univ_pos == ADJ:
@@ -68,6 +70,9 @@ class Lemmatizer(object):
     def verb(self, string, **morphology):
         return self(string, 'verb', **morphology)
 
+    def aux(self, string, **morphology):
+        return self(string, 'aux', **morphology)
+
     def adj(self, string, **morphology):
         return self(string, 'adj', **morphology)
 
@@ -76,7 +81,7 @@ class Lemmatizer(object):
 
 
 def lemmatize(string, index, exceptions, rules):
-    string = string.lower()
+    string = handleCase(string, exceptions)
     forms = []
     # TODO: Is this correct? See discussion in Issue #435.
     #if string in index:
@@ -89,7 +94,24 @@ def lemmatize(string, index, exceptions, rules):
                 forms.append(form)
     if not forms:
         forms.append(string)
+            
     return set(forms)
+
+def handleCase(string, exceptions):
+    countTenLemmas = 0
+    isUpper = 0
+    for lemmaEntry in exceptions:
+        if countTenLemmas > 10:
+            break
+        else:
+            if lemmaEntry[0].isupper():
+                isUpper +=1
+            countTenLemmas +=1
+    if isUpper > 6:
+        string = string[0].upper() + string[1:].lower()
+    else:
+        string = string.lower()
+    return string
 
 
 def read_index(fileobj):
